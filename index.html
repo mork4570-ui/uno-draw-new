@@ -1,0 +1,91 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>UNO Random Draw - Embed</title>
+  <style>
+    body{font-family:Arial,Helvetica,sans-serif;background:#f5f5f5;margin:0;padding:10px}
+    .container{max-width:820px;margin:0 auto;text-align:center}
+    .deck{margin-bottom:12px}
+    .cards{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+    .card{width:120px;height:180px;border-radius:8px;box-shadow:0 4px 8px rgba(0,0,0,0.12);display:flex;align-items:center;justify-content:center;font-size:28px;color:#fff}
+    .controls{margin-top:12px}
+    button{padding:10px 18px;font-size:16px;border-radius:8px;border:0;cursor:pointer;margin:0 4px}
+    .small{font-size:14px;margin-top:8px;color:#333}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h3>UNO Random Draw (Embed)</h3>
+    <div class="deck">ไพ่คงเหลือ: <span id="remaining">72</span></div>
+    <div class="cards" id="hand"></div>
+    <div class="controls">
+      <button id="drawBtn">จั่ว 5 ใบ</button>
+      <button id="returnBtn">คืนไพ่/รีเซ็ต</button>
+    </div>
+    <div class="small">* กองเริ่ม 72 ใบตามกติกาที่กำหนด</div>
+  </div>
+
+  <script>
+    function buildExactDeck(){
+      const deck = [];
+      const colors = ['red','blue','yellow','green'];
+      colors.forEach(c=>{
+        for(let n=0;n<=9;n++) deck.push({type:'number',color:c,value:n});
+      });
+      colors.forEach(c=>{deck.push({type:'+2',color:c});deck.push({type:'+2',color:c});});
+      colors.forEach(c=>{deck.push({type:'skip',color:c});deck.push({type:'skip',color:c});});
+      colors.forEach(c=>{deck.push({type:'reverse',color:c});deck.push({type:'reverse',color:c});});
+      for(let i=0;i<4;i++) deck.push({type:'+4'});
+      for(let i=0;i<4;i++) deck.push({type:'wild'});
+      return deck;
+    }
+
+    function shuffle(a){
+      for(let i=a.length-1;i>0;i--){
+        const j=Math.floor(Math.random()*(i+1));
+        [a[i],a[j]]=[a[j],a[i]];
+      }
+      return a;
+    }
+
+    let deck = shuffle(buildExactDeck());
+    let drawn = [];
+
+    function renderRemaining(){
+      document.getElementById('remaining').textContent = deck.length;
+    }
+
+    function renderHand(){
+      const handEl = document.getElementById('hand');handEl.innerHTML='';
+      drawn.forEach(c=>{
+        const d = document.createElement('div');d.className='card';
+        if(c.type==='number'){d.style.background=c.color;d.textContent=c.value}
+        else if(c.type==='+2'){d.style.background=c.color;d.textContent='+2'}
+        else if(c.type==='skip'){d.style.background=c.color;d.textContent='⛔'}
+        else if(c.type==='reverse'){d.style.background=c.color;d.textContent='↻'}
+        else if(c.type==='+4'){d.style.background='black';d.textContent='+4'}
+        else if(c.type==='wild'){d.style.background='black';d.textContent='W'}
+        handEl.appendChild(d);
+      });
+    }
+
+    document.getElementById('drawBtn').addEventListener('click',()=>{
+      if(deck.length===0){alert('ไม่มีไพ่ในกองแล้ว — รีเซ็ตเพื่อเริ่มใหม่');return}
+      const count = Math.min(5, deck.length);
+      for(let i=0;i<count;i++){
+        drawn.push(deck.shift());
+      }
+      renderHand();renderRemaining();
+    });
+
+    document.getElementById('returnBtn').addEventListener('click',()=>{
+      deck = deck.concat(drawn); drawn = []; deck = shuffle(deck);
+      renderHand();renderRemaining();
+    });
+
+    renderRemaining();
+  </script>
+</body>
+</html>
